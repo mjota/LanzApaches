@@ -105,10 +105,11 @@ class main:
         TotReq = 0.0
         for el in self.Trequest:
             TotReq = TotReq + el
-        Final = TotReq / TotLan 
-        self.resultlist.append(["Tiempo de respuesta: " + str(TotReq)])
-        self.resultlist.append(["Numero de peticiones: " + str(TotLan)])
+        Final = TotLan / (TotReq/1000)
+        self.resultlist.append(["Tiempo de respuesta: " + str(TotReq/1000) + " s"])
+        self.resultlist.append(["Número de peticiones: " + str(TotLan)])
         self.resultlist.append(["Productividad: " + str(Final)])
+        self.Trequest=[]
          
     def Lanzador(self,link):
         Comando = "ab -k -n 1 " + link
