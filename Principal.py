@@ -27,6 +27,8 @@
 import commands
 import random
 from gi.repository import Gtk
+from gi.repository import Notify
+import time
 
 class main:
     def __init__(self):
@@ -53,6 +55,8 @@ class main:
         self.about = builder.get_object("aboutdialog1")
         self.Trequest=[]  
         
+        Notify.init("LanzApaches")
+        
     def Salir(self,widget):
         print "He presionado el boton salir"
         
@@ -63,6 +67,11 @@ class main:
         self.about.hide()
     
     def Pruebas(self,widget):
+        Notif = Notify.Notification.new ("LanzApaches","Se ha iniciado el lanzamiento de comandos AB","dialog-information")
+        Notif.show()
+        for n in range(100):
+            print n
+        time.sleep(3)
         #self.Lanzador("http://130.206.134.121/carga1.php")
         #self.Lanzador("http://130.206.134.121/carga1.php")
         
@@ -74,9 +83,12 @@ class main:
         self.resultlist.append(["Adios"])
         self.resultlist.append(["Denuevo"])
         #self.textoFinal.get_buffer().set_text("Tiempo de respuesta: " + str(5) + "ms \nPrueba" + str(3))
+        Notif.update("LanzApaches","Finalizado el lanzamiento de comandos AB","dialog-information")
+        Notif.show()
         
     def Test(self,widget):
-        print "He presionado el boton de test1"
+        Notif = Notify.Notification.new ("LanzApaches","Se ha iniciado el lanzamiento de comandos AB","dialog-information")
+        Notif.show()
         
         a = float(self.entryCargas1.get_buffer().get_text())
         b = float(self.entryCargas2.get_buffer().get_text())
@@ -85,23 +97,25 @@ class main:
         
         tot = a+b+c
         a = int((100/tot)*a)
-        b = int((100/tot)*b)
-        c = int((100/tot)*c)
+        b = int(((100/tot)*b)+a)
+        c = int(((100/tot)*c)+b)
         
         TotLan = a+b+c
         
-        while ((a>0) or (b>0) or (c>0)):
-            ran = random.randint(1,3)
-            if (ran==1 and a>0):
-                self.Lanzador("http://130.206.134.121/carga1.php")
-                a -=1
-            elif (ran==2 and b>0):
-                self.Lanzador("http://130.206.134.121/carga2.php")
-                b -=1
-            elif (ran==3 and c>0):
-                self.Lanzador("http://130.206.134.121/carga2.php")
-                c -=1               
+        print a
+        print b
+        print c
         
+        for n in range(c):
+            ran = random.randint(1,c)
+            print ran
+            if (ran<a):
+                self.Lanzador("http://130.206.134.121/carga1.php")
+            elif (ran<b):
+                self.Lanzador("http://130.206.134.121/carga2.php")
+            else:
+                self.Lanzador("http://130.206.134.121/carga3.php")
+    
         TotReq = 0.0
         for el in self.Trequest:
             TotReq = TotReq + el
@@ -110,6 +124,9 @@ class main:
         self.resultlist.append(["Número de peticiones: " + str(TotLan)])
         self.resultlist.append(["Productividad: " + str(Final)])
         self.Trequest=[]
+
+        Notif.update("LanzApaches","Finalizado el lanzamiento de comandos AB","dialog-information")
+        Notif.show()
          
     def Lanzador(self,link):
         Comando = "ab -k -n 1 " + link
