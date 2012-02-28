@@ -19,10 +19,6 @@
 #
 #==============================================================================
 #
-# LanzApaches - Lanzador de comandos ab para AESI
-#
-# @author : Manuel Joaquin Díaz Pol
-# @date   : November 2011
 
 import commands
 import random
@@ -50,16 +46,18 @@ class main:
         self.entryCargas1 = builder.get_object("entry1")
         self.entryCargas2 = builder.get_object("entry2")
         self.entryCargas3 = builder.get_object("entry3")
-        #self.selCarga = builder.get_object("comboboxtext1")
+        self.entryDir1 = builder.get_object("entry4")
+        self.entryDir2 = builder.get_object("entry5")
+        self.entryDir3 = builder.get_object("entry6")
         self.resultlist = builder.get_object("liststore1")
         self.about = builder.get_object("aboutdialog1")
+        
         self.Trequest=[]  
+        self.Prod=[]
         
         Notify.init("LanzApaches")
         
-    def Salir(self,widget):
-        print "He presionado el boton salir"
-        
+    def Salir(self,widget):    
         Gtk.main_quit()
         
     def Acerca(self,widget):
@@ -69,8 +67,12 @@ class main:
     def Pruebas(self,widget):
         Notif = Notify.Notification.new ("LanzApaches","Se ha iniciado el lanzamiento de comandos AB","dialog-information")
         Notif.show()
-        for n in range(100):
-            print n
+        print self.entryCargas1.get_buffer().get_text()
+        print self.entryCargas2.get_buffer().get_text()
+        print self.entryCargas3.get_buffer().get_text()
+        print self.entryDir1.get_buffer().get_text()
+        print self.entryDir2.get_buffer().get_text()
+        print self.entryDir3.get_buffer().get_text()
         time.sleep(3)
         #self.Lanzador("http://130.206.134.121/carga1.php")
         #self.Lanzador("http://130.206.134.121/carga1.php")
@@ -82,6 +84,7 @@ class main:
         self.resultlist.append(["Hola"])
         self.resultlist.append(["Adios"])
         self.resultlist.append(["Denuevo"])
+        self.resultlist.append(["Ycuatro"])
         #self.textoFinal.get_buffer().set_text("Tiempo de respuesta: " + str(5) + "ms \nPrueba" + str(3))
         Notif.update("LanzApaches","Finalizado el lanzamiento de comandos AB","dialog-information")
         Notif.show()
@@ -93,51 +96,55 @@ class main:
         a = float(self.entryCargas1.get_buffer().get_text())
         b = float(self.entryCargas2.get_buffer().get_text())
         c = float(self.entryCargas3.get_buffer().get_text())
-        #sel = self.selCarga.get_active_text()
         
         tot = a+b+c
         a = int((100/tot)*a)
         b = int(((100/tot)*b)+a)
         c = int(((100/tot)*c)+b)
         
-        TotLan = a+b+c
-        
-        print a
-        print b
-        print c
-        
         for n in range(c):
             ran = random.randint(1,c)
-            print ran
-            if (ran<a):
-                self.Lanzador("http://130.206.134.121/carga1.php")
-            elif (ran<b):
-                self.Lanzador("http://130.206.134.121/carga2.php")
+            if (ran<=a):
+                self.Lanzador(self.entryDir1.get_buffer().get_text())
+            elif (ran<=b):
+                self.Lanzador(self.entryDir2.get_buffer().get_text())
             else:
-                self.Lanzador("http://130.206.134.121/carga3.php")
+                self.Lanzador(self.entryDir3.get_buffer().get_text())
     
         TotReq = 0.0
         for el in self.Trequest:
             TotReq = TotReq + el
-        Final = TotLan / (TotReq/1000)
-        self.resultlist.append(["Tiempo de respuesta: " + str(TotReq/1000) + " s"])
-        self.resultlist.append(["Número de peticiones: " + str(TotLan)])
-        self.resultlist.append(["Productividad: " + str(Final)])
+        FinalR = TotReq / c
+        
+        TotProd = 0.0
+        for el in self.Prod:
+            TotProd = TotProd + (1/el)
+        FinalP = c / TotProd
+        
+        self.resultlist.append(["Tiempo de respuesta total: " + str(TotReq/1000) + " s"])
+        self.resultlist.append(["Número de peticiones: " + str(c)])
+        self.resultlist.append(["Tiempo de respuesta medio: " + str(FinalR)+ " ms"] )
+        self.resultlist.append(["Productividad: " + str(FinalP) + " pet/sec" ])
         self.Trequest=[]
+        self.Prod=[]
 
         Notif.update("LanzApaches","Finalizado el lanzamiento de comandos AB","dialog-information")
         Notif.show()
          
     def Lanzador(self,link):
+        
         Comando = "ab -k -n 1 " + link
         result = commands.getoutput(Comando)
         self.textoResultado1.get_buffer().set_text(result)
-        tupla = result.split("Time per request:       ")
+        
+        tupla = result.split("Requests per second:    ")
+        tupla = tupla[1].split(" [#/sec]")
+        self.Prod.append(float(tupla[0])) 
+        
+        tupla = tupla[1].split("Time per request:       ")
         tupla = tupla[1].split(" [ms]")
-        self.Trequest.append(float(tupla[0]))         
-        
-        
-        
+        self.Trequest.append(float(tupla[0]))    
+         
 
 if __name__ == '__main__':
     main()
