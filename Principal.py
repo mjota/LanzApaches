@@ -49,6 +49,7 @@ class main:
         self.entryDir1 = builder.get_object("entry4")
         self.entryDir2 = builder.get_object("entry5")
         self.entryDir3 = builder.get_object("entry6")
+        self.entryNLanz = builder.get_object("entry7")
         self.resultlist = builder.get_object("liststore1")
         self.about = builder.get_object("aboutdialog1")
         
@@ -96,14 +97,15 @@ class main:
         a = float(self.entryCargas1.get_buffer().get_text())
         b = float(self.entryCargas2.get_buffer().get_text())
         c = float(self.entryCargas3.get_buffer().get_text())
+        tpx = int(self.entryNLanz.get_buffer().get_text())
         
         tot = a+b+c
-        a = int((100/tot)*a)
-        b = int(((100/tot)*b)+a)
-        c = int(((100/tot)*c)+b)
-        
-        for n in range(c):
-            ran = random.randint(1,c)
+        a = int((tpx/tot)*a)
+        b = int(((tpx/tot)*b)+a)
+        c = int(((tpx/tot)*c)+b)
+                
+        for n in range(tpx):
+            ran = random.randint(0,c)
             if (ran<=a):
                 self.Lanzador(self.entryDir1.get_buffer().get_text())
             elif (ran<=b):
@@ -114,15 +116,15 @@ class main:
         TotReq = 0.0
         for el in self.Trequest:
             TotReq = TotReq + el
-        FinalR = TotReq / c
+        FinalR = TotReq / tpx
         
         TotProd = 0.0
         for el in self.Prod:
             TotProd = TotProd + (1/el)
-        FinalP = c / TotProd
+        FinalP = tpx / TotProd
         
         self.resultlist.append(["Tiempo de respuesta total: " + str(TotReq/1000) + " s"])
-        self.resultlist.append(["Número de peticiones: " + str(c)])
+        self.resultlist.append(["Número de peticiones: " + str(tpx)])
         self.resultlist.append(["Tiempo de respuesta medio: " + str(FinalR)+ " ms"] )
         self.resultlist.append(["Productividad: " + str(FinalP) + " pet/sec" ])
         self.Trequest=[]
