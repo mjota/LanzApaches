@@ -24,7 +24,6 @@ import commands
 import random
 from gi.repository import Gtk
 from gi.repository import Notify
-import time
 import threading
 
 class main:
@@ -54,65 +53,49 @@ class main:
         self.resultlist = builder.get_object("liststore1")
         self.about = builder.get_object("aboutdialog1")
         
+        self.Inicia()
+        Notify.init("LanzApaches")
+    
+    #Inicializa las listas
+    def Inicia(self):
         self.Trequest=[]  
         self.Prod=[]
-        self.Peso=[]
+        self.Peso=[]        
         
-        Notify.init("LanzApaches")
-        
+    #Salir
     def Salir(self,widget):    
         Gtk.main_quit()
-        
+    
+    #Lanza ventana about 
     def Acerca(self,widget):
         self.about.run()
         self.about.hide()
     
+    #Botón de pruebas
     def Pruebas(self,widget):
-        Notif = Notify.Notification.new ("LanzApaches","Se ha iniciado el lanzamiento de comandos AB","dialog-information")
-        Notif.show()
-        print self.entryCargas1.get_buffer().get_text()
-        print self.entryCargas2.get_buffer().get_text()
-        print self.entryCargas3.get_buffer().get_text()
-        print self.entryDir1.get_buffer().get_text()
-        print self.entryDir2.get_buffer().get_text()
-        print self.entryDir3.get_buffer().get_text()
-        time.sleep(3)
-        #self.Lanzador("http://130.206.134.121/carga1.php")
-        #self.Lanzador("http://130.206.134.121/carga1.php")
-        
-        #TotReq = 0.0
-        #for el in self.Trequest:
-        #TotReq = TotReq + el
-        #print TotReq
-        self.resultlist.append(["Hola"])
-        self.resultlist.append(["Adios"])
-        self.resultlist.append(["Denuevo"])
-        self.resultlist.append(["Ycuatro"])
-        #self.textoFinal.get_buffer().set_text("Tiempo de respuesta: " + str(5) + "ms \nPrueba" + str(3))
-        Notif.update("LanzApaches","Finalizado el lanzamiento de comandos AB","dialog-information")
-        Notif.show()
-    
-    def LanzaTest(self,widget): 
         t1 = threading.Thread(target=self.Test)
         t1.start()
         t1.join()
-
-        
+    
+    #Recoge los datos y los calcula
     def Test(self,widget):
+        #Muestra notificación de inicio
         Notif = Notify.Notification.new ("LanzApaches","Se ha iniciado el lanzamiento de comandos AB","dialog-information")
         Notif.show()
         
+        #Recoge los datos de las entradas
         a = float(self.entryCargas1.get_buffer().get_text())
         b = float(self.entryCargas2.get_buffer().get_text())
         c = float(self.entryCargas3.get_buffer().get_text())
         tpx = int(self.entryNLanz.get_buffer().get_text())
         
+        #Asigna un peso a cada carga
         tot = a+b+c
         a = int((tpx/tot)*a)
         b = int(((tpx/tot)*b)+a)
         c = int(((tpx/tot)*c)+b)
-                
-        calcul = 0.0
+        
+        #Realiza el lanzamiento de cargas de forma aleatoria, añade el peso correspondiente a la lista
         for n in range(tpx):
             ran = random.randint(0,c)
             if (ran<=a):
@@ -145,25 +128,33 @@ class main:
         FinalP = tpx / TotProd
         
         #Desviación típica de tiempos de respuesta
-        Desv = 0.0
+        DesvT = 0.0
         for el in self.Trequest:
-            Desv = (el-FinalR)**2 + Desv
-        Desv = (Desv/tpx)**0.5
+            DesvT = (el-FinalR)**2 + DesvT
+        DesvT = (DesvT/tpx)**0.5
         
+        #Desviación típica de productividad
+        DesvP = 0.0
+        for el in self.Prod:
+            DesvP = (el-FinalP)**2 + DesvP
+        DesvP = (DesvP/tpx)**0.5
+        
+        #Carga los resultados en la tabla
         self.resultlist.append(["Tiempo de respuesta total: " + str(TotReq/1000) + " s"])
         self.resultlist.append(["Número de peticiones: " + str(tpx)])
         self.resultlist.append(["Tiempo de respuesta medio: " + str(FinalR)+ " ms"] )
         self.resultlist.append(["Tiempo de respuesta ponderado: " + str(TotReqPon) + " ms"])
-        self.resultlist.append(["Desviación típica de tiempo de respuesta " + str(Desv)] + " ms")
+        self.resultlist.append(["Desviación típica de tiempo de respuesta: " + str(DesvT) + " ms"])
         self.resultlist.append(["Productividad: " + str(FinalP) + " pet/sec" ])
-        
-        self.Trequest=[]
-        self.Prod=[]
-        self.Peso=[]
+        self.resultlist.append(["Desviación típica de productividad: " + str(DesvP) + " pet/sec"])
 
+        #Muestra notificación de final
         Notif.update("LanzApaches","Finalizado el lanzamiento de comandos AB","dialog-information")
         Notif.show()
-         
+        
+        self.Inicia()
+    
+    #Realiza el lanzamiento individual y guarda los resultados en listas   
     def Lanzador(self,link):
         
         Comando = "ab -k -n 1 " + link
@@ -177,8 +168,6 @@ class main:
         tupla = tupla[1].split("Time per request:       ")
         tupla = tupla[1].split(" [ms]")
         self.Trequest.append(float(tupla[0]))  
-        
-          
          
 
 if __name__ == '__main__':
