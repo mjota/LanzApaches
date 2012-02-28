@@ -25,6 +25,7 @@ import random
 from gi.repository import Gtk
 from gi.repository import Notify
 import time
+import threading
 
 class main:
     def __init__(self):
@@ -55,6 +56,7 @@ class main:
         
         self.Trequest=[]  
         self.Prod=[]
+        self.Peso=[]
         
         Notify.init("LanzApaches")
         
@@ -89,6 +91,12 @@ class main:
         #self.textoFinal.get_buffer().set_text("Tiempo de respuesta: " + str(5) + "ms \nPrueba" + str(3))
         Notif.update("LanzApaches","Finalizado el lanzamiento de comandos AB","dialog-information")
         Notif.show()
+    
+    def LanzaTest(self,widget): 
+        t1 = threading.Thread(target=self.Test)
+        t1.start()
+        t1.join()
+
         
     def Test(self,widget):
         Notif = Notify.Notification.new ("LanzApaches","Se ha iniciado el lanzamiento de comandos AB","dialog-information")
@@ -104,31 +112,54 @@ class main:
         b = int(((tpx/tot)*b)+a)
         c = int(((tpx/tot)*c)+b)
                 
+        calcul = 0.0
         for n in range(tpx):
             ran = random.randint(0,c)
             if (ran<=a):
                 self.Lanzador(self.entryDir1.get_buffer().get_text())
+                self.Peso.append((float(a)/float(tpx)))
             elif (ran<=b):
                 self.Lanzador(self.entryDir2.get_buffer().get_text())
+                self.Peso.append(float(b-a)/float(tpx))
             else:
                 self.Lanzador(self.entryDir3.get_buffer().get_text())
+                self.Peso.append(float(c-b)/float(tpx))
     
+        #Media aritmética de tiempos de respuesta
         TotReq = 0.0
         for el in self.Trequest:
             TotReq = TotReq + el
         FinalR = TotReq / tpx
         
+        #Media aritmética de tiempos de respuesta ponderada
+        TotReqPon = 0.0
+        n = 0
+        for el in self.Trequest:
+            TotReqPon = TotReqPon + el * self.Peso[n]
+            n+=1
+        
+        #Media armónica de productividad
         TotProd = 0.0
         for el in self.Prod:
             TotProd = TotProd + (1/el)
         FinalP = tpx / TotProd
         
+        #Desviación típica de tiempos de respuesta
+        Desv = 0.0
+        for el in self.Trequest:
+            Desv = (el-FinalR)**2 + Desv
+        Desv = (Desv/tpx)**0.5
+        
         self.resultlist.append(["Tiempo de respuesta total: " + str(TotReq/1000) + " s"])
         self.resultlist.append(["Número de peticiones: " + str(tpx)])
         self.resultlist.append(["Tiempo de respuesta medio: " + str(FinalR)+ " ms"] )
+        self.resultlist.append(["Tiempo de respuesta ponderado: " + str(TotReqPon) + " ms"])
+        self.resultlist.append(["Desviación típica de tiempo de respuesta " + str(Desv)] + " ms")
         self.resultlist.append(["Productividad: " + str(FinalP) + " pet/sec" ])
+        
         self.Trequest=[]
         self.Prod=[]
+        self.Peso=[]
 
         Notif.update("LanzApaches","Finalizado el lanzamiento de comandos AB","dialog-information")
         Notif.show()
@@ -145,7 +176,9 @@ class main:
         
         tupla = tupla[1].split("Time per request:       ")
         tupla = tupla[1].split(" [ms]")
-        self.Trequest.append(float(tupla[0]))    
+        self.Trequest.append(float(tupla[0]))  
+        
+          
          
 
 if __name__ == '__main__':
