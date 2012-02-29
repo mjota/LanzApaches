@@ -26,6 +26,7 @@ from gi.repository import Gtk
 from gi.repository import Notify
 import threading
 
+
 class main:
     def __init__(self):
         #Crea la ventana de trabajo principal y obtiene los objetos en Glade
@@ -40,9 +41,8 @@ class main:
         builder.connect_signals(dict)
         
         self.textoResultado1 = builder.get_object("textview1")
-        self.textoResultado2 = builder.get_object("textview2")
-        self.textoResultado3 = builder.get_object("textview3")
-        self.textoFinal = builder.get_object("textview4")
+        self.textoTiempos = builder.get_object("textview2")
+        self.textoProd = builder.get_object("textview3")
         self.entryCargas1 = builder.get_object("entry1")
         self.entryCargas2 = builder.get_object("entry2")
         self.entryCargas3 = builder.get_object("entry3")
@@ -75,7 +75,7 @@ class main:
     def Pruebas(self,widget):
         t1 = threading.Thread(target=self.Test)
         t1.start()
-        t1.join()
+        #t1.join()
     
     #Recoge los datos y los calcula
     def Test(self,widget):
@@ -94,7 +94,7 @@ class main:
         a = int((tpx/tot)*a)
         b = int(((tpx/tot)*b)+a)
         c = int(((tpx/tot)*c)+b)
-        
+                
         #Realiza el lanzamiento de cargas de forma aleatoria, añade el peso correspondiente a la lista
         for n in range(tpx):
             ran = random.randint(0,c)
@@ -152,11 +152,15 @@ class main:
         Notif.update("LanzApaches","Finalizado el lanzamiento de comandos AB","dialog-information")
         Notif.show()
         
+        #Añade los tiempos y productividad a las pestañas
+        self.textoTiempos.get_buffer().set_text('\n'.join(map(str , self.Trequest)))
+        self.textoProd.get_buffer().set_text('\n'.join(map(str , self.Prod)))
+        
         self.Inicia()
     
     #Realiza el lanzamiento individual y guarda los resultados en listas   
     def Lanzador(self,link):
-        
+                
         Comando = "ab -k -n 1 " + link
         result = commands.getoutput(Comando)
         self.textoResultado1.get_buffer().set_text(result)
@@ -173,6 +177,5 @@ class main:
 if __name__ == '__main__':
     main()
     Gtk.main()
-           
 
     
