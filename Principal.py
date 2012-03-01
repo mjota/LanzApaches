@@ -118,7 +118,7 @@ class main:
         TotReqPon = 0.0
         n = 0
         for el in self.Trequest:
-            TotReqPon = TotReqPon + el * self.Peso[n]
+            TotReqPon = TotReqPon + (el * self.Peso[n])
             n+=1
         
         #Media armónica de productividad
@@ -126,6 +126,14 @@ class main:
         for el in self.Prod:
             TotProd = TotProd + (1/el)
         FinalP = tpx / TotProd
+        
+        #Media armónica de productividad ponderada
+        TotProdPon = 0.0
+        n = 0
+        for el in self.Prod:
+            TotProdPon = TotProdPon + (self.Peso[n]/el)
+            n+=1
+        FinalPp = 1/TotProdPon        
         
         #Desviación típica de tiempos de respuesta
         DesvT = 0.0
@@ -145,7 +153,8 @@ class main:
         self.resultlist.append(["Tiempo de respuesta medio: " + str(FinalR)+ " ms"] )
         self.resultlist.append(["Tiempo de respuesta ponderado: " + str(TotReqPon) + " ms"])
         self.resultlist.append(["Desviación típica de tiempo de respuesta: " + str(DesvT) + " ms"])
-        self.resultlist.append(["Productividad: " + str(FinalP) + " pet/sec" ])
+        self.resultlist.append(["Productividad media: " + str(FinalP) + " pet/sec" ])
+        self.resultlist.append(["Productividad media ponderada: " + str(FinalPp) + " pet/sec"])
         self.resultlist.append(["Desviación típica de productividad: " + str(DesvP) + " pet/sec"])
 
         #Muestra notificación de final
