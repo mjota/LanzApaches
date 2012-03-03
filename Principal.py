@@ -24,7 +24,6 @@ import commands
 import random
 from gi.repository import Gtk
 from gi.repository import Notify
-import threading
 
 
 class main:
@@ -41,8 +40,6 @@ class main:
         builder.connect_signals(dict)
         
         self.textoResultado1 = builder.get_object("textview1")
-        self.textoTiempos = builder.get_object("textview2")
-        self.textoProd = builder.get_object("textview3")
         self.entryCargas1 = builder.get_object("entry1")
         self.entryCargas2 = builder.get_object("entry2")
         self.entryCargas3 = builder.get_object("entry3")
@@ -51,6 +48,7 @@ class main:
         self.entryDir3 = builder.get_object("entry6")
         self.entryNLanz = builder.get_object("entry7")
         self.resultlist = builder.get_object("liststore1")
+        self.biglist = builder.get_object("liststore2")
         self.about = builder.get_object("aboutdialog1")
         
         self.Inicia()
@@ -73,10 +71,8 @@ class main:
     
     #Botón de pruebas
     def Pruebas(self,widget):
-        t1 = threading.Thread(target=self.Test)
-        t1.start()
-        #t1.join()
-    
+        self.Test()
+        
     #Recoge los datos y los calcula
     def Test(self,widget):
         #Muestra notificación de inicio
@@ -91,22 +87,22 @@ class main:
         
         #Asigna un peso a cada carga
         tot = a+b+c
-        a = int((tpx/tot)*a)
-        b = int(((tpx/tot)*b)+a)
-        c = int(((tpx/tot)*c)+b)
-                
+        a = a/tot
+        b = (b/tot)+a
+        c = (c/tot)+b
+                  
         #Realiza el lanzamiento de cargas de forma aleatoria, añade el peso correspondiente a la lista
         for n in range(tpx):
-            ran = random.randint(0,c)
+            ran = random.random()
             if (ran<=a):
                 self.Lanzador(self.entryDir1.get_buffer().get_text())
-                self.Peso.append((float(a)/float(tpx)))
+                self.Peso.append(a)
             elif (ran<=b):
                 self.Lanzador(self.entryDir2.get_buffer().get_text())
-                self.Peso.append(float(b-a)/float(tpx))
+                self.Peso.append(b-a)
             else:
                 self.Lanzador(self.entryDir3.get_buffer().get_text())
-                self.Peso.append(float(c-b)/float(tpx))
+                self.Peso.append(c-b)
     
         #Media aritmética de tiempos de respuesta
         TotReq = 0.0
@@ -118,8 +114,9 @@ class main:
         TotReqPon = 0.0
         n = 0
         for el in self.Trequest:
-            TotReqPon = TotReqPon + (el * self.Peso[n])
+            TotReqPon = TotReqPon + (el * (self.Peso[n]/tpx))
             n+=1
+        TotReqPon = TotReqPon * 3
         
         #Media armónica de productividad
         TotProd = 0.0
@@ -131,9 +128,10 @@ class main:
         TotProdPon = 0.0
         n = 0
         for el in self.Prod:
-            TotProdPon = TotProdPon + (self.Peso[n]/el)
+            TotProdPon = TotProdPon + ((self.Peso[n]/tpx)/el)
             n+=1
-        FinalPp = 1/TotProdPon        
+        FinalPp = 1/TotProdPon  
+        FinalPp = FinalPp / 3      
         
         #Desviación típica de tiempos de respuesta
         DesvT = 0.0
@@ -147,7 +145,7 @@ class main:
             DesvP = (el-FinalP)**2 + DesvP
         DesvP = (DesvP/tpx)**0.5
         
-        #Carga los resultados en la tabla
+        #Carga los resultados en la tabla resumen
         self.resultlist.append(["Tiempo de respuesta total: " + str(TotReq/1000) + " s"])
         self.resultlist.append(["Número de peticiones: " + str(tpx)])
         self.resultlist.append(["Tiempo de respuesta medio: " + str(FinalR)+ " ms"] )
@@ -156,15 +154,17 @@ class main:
         self.resultlist.append(["Productividad media: " + str(FinalP) + " pet/sec" ])
         self.resultlist.append(["Productividad media ponderada: " + str(FinalPp) + " pet/sec"])
         self.resultlist.append(["Desviación típica de productividad: " + str(DesvP) + " pet/sec"])
+        
+        #Añade todos los datos obtenidos a la tabla inferior
+        n = 0
+        for n in range(tpx):
+            self.biglist.append([str(n), str(self.Trequest[n]) + " ms", str(self.Prod[n]) + " pet/sec", str(self.Peso[n])])  
+        
 
         #Muestra notificación de final
         Notif.update("LanzApaches","Finalizado el lanzamiento de comandos AB","dialog-information")
         Notif.show()
-        
-        #Añade los tiempos y productividad a las pestañas
-        self.textoTiempos.get_buffer().set_text('\n'.join(map(str , self.Trequest)))
-        self.textoProd.get_buffer().set_text('\n'.join(map(str , self.Prod)))
-        
+               
         self.Inicia()
     
     #Realiza el lanzamiento individual y guarda los resultados en listas   
@@ -172,7 +172,6 @@ class main:
                 
         Comando = "ab -k -n 1 " + link
         result = commands.getoutput(Comando)
-        self.textoResultado1.get_buffer().set_text(result)
         
         tupla = result.split("Requests per second:    ")
         tupla = tupla[1].split(" [#/sec]")
