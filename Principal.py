@@ -24,6 +24,7 @@ import commands
 import random
 from gi.repository import Gtk
 from gi.repository import Notify
+import time
 
 
 class main:
@@ -72,6 +73,28 @@ class main:
     #Botón de pruebas
     def Pruebas(self,widget):
         self.Test()
+    
+    #Escribe los resultados en un fichero log
+    def Fichero(self,tpx,Resultados):
+        try:
+            FRes = open("resultados.log","a")
+        except (NameError, ValueError):
+            print "No existe y es uno de estos"
+        except IOError:
+            print "Error de archivo no encontrado"
+        except:
+            print "No existe y el error es otro"
+        else:
+            print "El archivo existe"
+        
+        FRes.write(time.strftime("%d-%m-%Y %H:%M:%S") + "\n")
+        FRes.writelines(Resultados)
+        n = 0
+        for n in range(tpx):
+            FRes.write(str(n) + "    " + str(self.Trequest[n]) + " ms    " + str(self.Prod[n]) + " pet/sec    " + str(self.Peso[n]) + "\n")
+        FRes.write("\n------------\n")
+        
+        FRes.close()           
         
     #Recoge los datos y los calcula
     def Test(self,widget):
@@ -154,11 +177,25 @@ class main:
         self.resultlist.append(["Productividad media: " + str(FinalP) + " pet/sec" ])
         self.resultlist.append(["Productividad media ponderada: " + str(FinalPp) + " pet/sec"])
         self.resultlist.append(["Desviación típica de productividad: " + str(DesvP) + " pet/sec"])
+        self.resultlist.append([" "])
+        
+        #Prepara los resultados para el fichero log
+        Resultados = ["Tiempo de respuesta total: " + str(TotReq/1000) + " s \n",
+                      "Número de peticiones: " + str(tpx) + "\n",
+                      "Tiempo de respuesta medio: " + str(FinalR)+ " ms \n",
+                      "Tiempo de respuesta ponderado: " + str(TotReqPon) + " ms \n",
+                      "Desviación típica de tiempo de respuesta: " + str(DesvT) + " ms \n",
+                      "Productividad media: " + str(FinalP) + " pet/sec \n",
+                      "Productividad media ponderada: " + str(FinalPp) + " pet/sec \n",
+                      "Desviación típica de productividad: " + str(DesvP) + " pet/sec \n"]
         
         #Añade todos los datos obtenidos a la tabla inferior
         n = 0
         for n in range(tpx):
-            self.biglist.append([str(n), str(self.Trequest[n]) + " ms", str(self.Prod[n]) + " pet/sec", str(self.Peso[n])])  
+            self.biglist.append([str(n), str(self.Trequest[n]) + " ms", str(self.Prod[n]) + " pet/sec", str(self.Peso[n])])
+        self.biglist.append([" "," "," "," "])  
+        
+        self.Fichero(tpx,Resultados)
         
 
         #Muestra notificación de final
